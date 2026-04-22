@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Security System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f2f5;
+        }
+
+        /* Card Container */
+        .card {
+            background: #ffffff;
+            width: 380px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            margin-bottom: 30px;
+            color: #1a1a1a;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Error & Cooldown Messages */
+        .message-container {
+            min-height: 20px;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        .error-text {
+            color: #ef4444;
+        }
+
+        .cooldown-text {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        /* Button Styling */
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #9ca3af;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: not-allowed;
+            margin-top: 10px;
+        }
+
+        .login-btn.enabled {
+            background: #10b981;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        }
+
+        .login-btn.enabled:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+        }
+
+        /* Footer */
+        .signup-text {
+            margin-top: 25px;
+            font-size: 14px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .signup-text a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Login</h2>
+
+    <form method="POST" id="loginForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" minlength="3"
+                   placeholder="Enter your username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" minlength="8"
+                   placeholder="Enter your password" required>
+
+            <div id="message-container" class="message-container">
+                {% if error %}
+                    <span class="error-text">Incorrect username or password.</span>
+                {% elif cooldown %}
+                    <span id="cooldown-display" class="cooldown-text">
+                        Too many attempts. Locked for {{ timeleft }}s.
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="submit" id="loginBtn" class="login-btn" disabled>
+            Login
+        </button>
+    </form>
+
+    <div class="signup-text">
+        Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a>
+    </div>
+</div>
+
+<script>
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const loginBtn = document.getElementById("loginBtn");
+    const messageContainer = document.getElementById("message-container");
+
+    // משתנה שעוזר לנו לדעת אם כרגע יש חסימה פעילה
+    let isLocked = {% if cooldown %} true {% else %} false {% endif %};
+
+    // פונקציה לבדיקת תקינות השדות והפעלת הכפתור
+    function validateForm() {
+        const isUsernameValid = usernameInput.value.trim().length >= 3;
+        const isPasswordValid = passwordInput.value.length >= 8;
+
+        if (isUsernameValid && isPasswordValid && !isLocked) {
+            loginBtn.disabled = false;
+            loginBtn.classList.add("enabled");
+        } else {
+            loginBtn.disabled = true;
+            loginBtn.classList.remove("enabled");
+        }
+    }
+
+    usernameInput.addEventListener("input", validateForm);
+    passwordInput.addEventListener("input", validateForm);
+
+    // לוגיקת טיימר במידה והשרת החזיר חסימה (Cooldown)
+    {% if cooldown %}
+    let timeLeft = {{ timeleft }};
+    const display = document.getElementById("cooldown-display");
+
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            isLocked = false;
+            messageContainer.innerHTML = ""; // מנקה את הודעת השגיאה
+            validateForm(); // בודק אם אפשר להחזיר את הכפתור לשימוש
+        } else {
+            if (display) {
+                display.innerText = `Too many attempts. Locked for ${timeLeft}s.`;
+            }
+        }
+    }, 1000);
+    {% endif %}
+
+    // מניעת שליחה של הטופס אם המשתמש לוחץ Enter בזמן חסימה
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+        if (isLocked) {
+            e.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>
