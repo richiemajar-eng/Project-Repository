@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Welcome</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#fff;
+}
+
+.card{
+    background:#f8f9fc;
+    width:350px;
+    padding:40px;
+    border-radius:12px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.1);
+    text-align:center;
+}
+
+.card h2{
+    margin-bottom:30px;
+    color:#333;
+}
+
+/* Buttons */
+.action-btn{
+    width:100%;
+    padding:12px;
+    margin-bottom:15px;
+    border:none;
+    border-radius:6px;
+    background:#6c757d; /* default gray */
+    color:white;
+    font-size:15px;
+    cursor:pointer;
+    transition:0.3s;
+    text-decoration:none;
+    display:inline-block;
+}
+
+/* Hover → green */
+.action-btn:hover{
+    background:#28a745;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Welcome</h2>
+
+<a href="{{ url_for('login') }}" class="action-btn">
+Login
+</a>
+
+<a href="{{ url_for('signup') }}" class="action-btn">
+Sign Up
+</a>
+
+</div>
+
+</body>
+</html>

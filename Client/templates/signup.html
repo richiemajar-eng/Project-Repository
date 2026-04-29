@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Security System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f2f5;
+        }
+
+        .card {
+            background: #ffffff;
+            width: 400px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            margin-bottom: 25px;
+            color: #1a1a1a;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* הודעות סטטוס */
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .status-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .error-text {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+            min-height: 15px;
+        }
+
+        /* עיצוב הכפתור */
+        .signup-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #9ca3af; /* צבע אפור כשהוא כבוי */
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: not-allowed;
+            margin-top: 10px;
+        }
+
+        .signup-btn.enabled {
+            background: #10b981; /* צבע ירוק כשהוא פעיל */
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        }
+
+        .signup-btn.enabled:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .login-text {
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .login-text a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Create Account</h2>
+
+    {% if messages %}
+    <div class="status-message {% if success %}status-success{% else %}status-error{% endif %}">
+        {{ messages }}
+        {% if success %}<br><strong>{{ success }}</strong>{% endif %}
+    </div>
+    {% endif %}
+
+    <form method="POST" id="signupForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username"
+                   placeholder="3-20 characters" required value="{{ request.form.get('username', '') }}">
+            <div id="usernameError" class="error-text"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email"
+                   placeholder="example@domain.com" required value="{{ request.form.get('email', '') }}">
+            <div id="emailError" class="error-text"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password"
+                   placeholder="8-24 characters" required>
+            <div id="passwordError" class="error-text"></div>
+        </div>
+
+        <button type="submit" id="signupBtn" class="signup-btn" disabled>
+            Sign Up
+        </button>
+    </form>
+
+    <div class="login-text">
+        Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+    </div>
+</div>
+
+<script>
+    // הגדרת המשתנים מול ה-DOM
+    const usernameInput = document.getElementById("username");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const signupBtn = document.getElementById("signupBtn");
+
+    const usernameError = document.getElementById("usernameError");
+    const emailError = document.getElementById("emailError");
+    const passwordError = document.getElementById("passwordError");
+
+    function validateForm() {
+        const uVal = usernameInput.value.trim();
+        const eVal = emailInput.value.trim();
+        const pVal = passwordInput.value;
+
+        // חוקי אימות
+        const isUsernameValid = uVal.length >= 3 && uVal.length <= 20;
+        const isPasswordValid = pVal.length >= 8 && pVal.length <= 24;
+
+        // בדיקת פורמט אימייל בסיסית (Regex)
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isEmailValid = emailPattern.test(eVal);
+
+        // הפעלת/כיבוי הכפתור
+        if (isUsernameValid && isPasswordValid && isEmailValid) {
+            signupBtn.disabled = false;
+            signupBtn.classList.add("enabled");
+        } else {
+            signupBtn.disabled = true;
+            signupBtn.classList.remove("enabled");
+        }
+
+        // הצגת הודעות שגיאה בזמן אמת (אופציונלי)
+        usernameError.innerText = (uVal.length > 0 && !isUsernameValid) ? "3-20 characters required" : "";
+        emailError.innerText = (eVal.length > 0 && !isEmailValid) ? "Invalid email format" : "";
+        passwordError.innerText = (pVal.length > 0 && !isPasswordValid) ? "8-24 characters required" : "";
+    }
+
+    // האזנה לשינויים בכל השדות
+    usernameInput.addEventListener("input", validateForm);
+    emailInput.addEventListener("input", validateForm);
+    passwordInput.addEventListener("input", validateForm);
+</script>
+
+</body>
+</html>
